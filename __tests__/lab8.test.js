@@ -1,7 +1,7 @@
 describe('Basic user flow for Website', () => {
   // First, visit the lab 8 website
   beforeAll(async () => {
-    await page.goto('http://127.0.0.1:5500/index.html');
+    await page.goto('https://cse110-f2021.github.io/Lab8_Website');
   });
 
   // Next, check to make sure that all 20 <product-item> elements have loaded
@@ -11,10 +11,10 @@ describe('Basic user flow for Website', () => {
     const numProducts = await page.$$eval('product-item', (prodItems) => {
       return prodItems.length;
     });
+    
     // Expect there that array from earlier to be of length 20, meaning 20 <product-item> elements where found
     expect(numProducts).toBe(20);
   });
-
   // Check to make sure that all 20 <product-item> elements have data in them
   it('Make sure <product-item> elements are populated', async () => {
     console.log('Checking to make sure <product-item> elements are populated...');
@@ -24,14 +24,14 @@ describe('Basic user flow for Website', () => {
     // Query select all of the <product-item> elements
     const prodItems = await page.$$('product-item');
     // Grab the .data property of <product-items> to grab all of the json data stored inside
-    prodItems.forEach(async product => {
-      data = await product.getProperty('data');
+    for (let i = 0; i < prodItems.length; i++) {
+      data = await prodItems[i].getProperty('data');
       plainValue = await data.jsonValue();
 
       if (plainValue.title.length == 0) { allArePopulated = false; }
       if (plainValue.price.length == 0) { allArePopulated = false; }
       if (plainValue.image.length == 0) { allArePopulated = false; }
-    })
+    }
     expect(allArePopulated).toBe(true);
   }, 10000);
 
@@ -46,11 +46,11 @@ describe('Basic user flow for Website', () => {
     // Once you have the innerText property, use innerText.jsonValue() to get the text value of it
     const prodItem = await page.$('product-item');
     const shadowRoot = await prodItem.getProperty('shadowRoot');
-    const button = await shadow.$('button')
+    const button = await shadowRoot.$('button');
 
-    await page.click(button);
+    await button.click();
 
-    let text = await button.getProperty('innerText');
+    const text = await button.getProperty('innerText');
     expect(await text.jsonValue()).toBe('Remove from Cart');
   }, 2500);
 
@@ -63,12 +63,17 @@ describe('Basic user flow for Website', () => {
     // get the shadowRoot and query select the button inside, and click on it.
     // Check to see if the innerText of #cart-count is 20
     const prodItems = await page.$$('product-item');
+    let counter = 0;
 
-    prodItems.forEach(async product => {
-      const shadowRoot = await product.getProperty('shadowRoot');
+    for (let items of prodItems) {
+      const shadowRoot = await items.getProperty('shadowRoot');
       const button = await shadowRoot.$('button');
-      await page.click(button);
-    })
+      await button.click();
+      counter++;
+      if (counter === 1) {
+        await button.click();
+      }
+    }
 
     const count = await page.$('#cart-count');
     const text = await count.getProperty('innerText');
@@ -85,18 +90,21 @@ describe('Basic user flow for Website', () => {
     await page.reload();
 
     const prodItems = await page.$$('product-item');
+    console.log(prodItems.length)
 
-    prodItems.forEach(async product => {
-      const shadowRoot = await product.getProperty('shadowRoot');
+    for (let items of prodItems) {
+      const shadowRoot = await items.getProperty('shadowRoot');
       const button = await shadowRoot.$('button');
       const buttonText = await button.getProperty('innerText');
       expect(await buttonText.jsonValue()).toBe('Remove from Cart');
-    })
+    }
 
     const count = await page.$('#cart-count');
     const text = await count.getProperty('innerText');
+
     expect(await text.jsonValue()).toBe('20');
   }, 10000);
+
 
   // Check to make sure that the cart in localStorage is what you expect
   it('Checking the localStorage to make sure cart is correct', async () => {
@@ -116,11 +124,11 @@ describe('Basic user flow for Website', () => {
     // Once you have, check to make sure that #cart-count is now 0
     const prodItems = await page.$$('product-item');
 
-    prodItems.forEach(async product => {
-      const shadowRoot = await product.getProperty('shadowRoot');
+    for (let items of prodItems) {
+      const shadowRoot = await items.getProperty('shadowRoot');
       const button = await shadowRoot.$('button');
-      await page.click(button);
-    })
+      await button.click();
+    }
 
     const count = await page.$('#cart-count');
     const text = await count.getProperty('innerText');
@@ -140,12 +148,12 @@ describe('Basic user flow for Website', () => {
 
     const prodItems = await page.$$('product-item');
 
-    prodItems.forEach(async product => {
-      const shadowRoot = await product.getProperty('shadowRoot');
+    for (let items of prodItems) {
+      const shadowRoot = await items.getProperty('shadowRoot');
       const button = await shadowRoot.$('button');
       const buttonText = await button.getProperty('innerText');
       expect(await buttonText.jsonValue()).toBe('Add to Cart');
-    })
+    }
 
     const count = await page.$('#cart-count');
     const text = await count.getProperty('innerText');
